@@ -2,20 +2,84 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Loenese Translator & OCR</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>loen Translator & OCR</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/tesseract.js/4.1.1/tesseract.min.js"></script>
   <link rel="stylesheet" href="style.css">
-  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 </head>
 <body>
-  <h1>Loenese Translator & OCR</h1>
+  <div class="container">
+    <div class="header">
+      <h1>🃏 loen Translator</h1>
+      <p>Presgard Di Hellis </p>
+    </div>
 
-  <h2>English → Runes</h2>
-  <textarea id="englishInput" placeholder="Type English here..."></textarea>
-  <p class="runes" id="runeOutput"></p>
+    <div class="main-content">
+      <!-- Text Translator -->
+      <div class="section">
+        <h2> Text Translator</h2>
+        
+        <div class="textarea-container">
+          <label for="englishInput">English Text:</label>
+          <textarea id="englishInput" placeholder="Type your English text here..."></textarea>
+        </div>
 
-  <h2>OCR: Image → English</h2>
-  <input type="file" id="imageUpload" accept="image/*">
-  <p id="ocrResult"></p>
+        <div class="controls">
+          <button onclick="translateToloen()">English → loen</button>
+          <button onclick="translateToEnglish()">loen → English</button>
+          <button onclick="swapTexts()">↕️ Swap</button>
+          <button onclick="clearTexts()">🗑️ Clear</button>
+        </div>
+
+        <div class="textarea-container">
+          <label for="loenseOutput">loen Text:</label>
+          <textarea id="loenseOutput" class="loen-text" placeholder="loen translation will appear here..."></textarea>
+        </div>
+
+        <div class="mapping-display" id="mappingDisplay">
+          Character mapping will appear here when translating...
+        </div>
+      </div>
+
+      <!-- Character Reference -->
+      <div class="section">
+        <h2>📚 Character Reference</h2>
+        <div id="characterReference">
+          <p style="margin-bottom: 15px;">Character mappings (A-Z, a-z, 0-9):</p>
+          <div id="charGrid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(40px, 1fr)); gap: 10px; font-size: 12px;">
+            <!-- Character grid will be populated by JavaScript -->
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- OCR Section -->
+    <div class="section ocr-section">
+      <h2>👁️ loen OCR (Image to Text)</h2>
+      
+      <div class="file-input-wrapper">
+        <input type="file" id="imageInput" class="file-input" accept="image/*">
+        <label for="imageInput" class="file-input-label">📷 Upload Image</label>
+      </div>
+
+      <img id="imagePreview" class="image-preview" alt="Uploaded image preview">
+      
+      <div class="progress" id="progressContainer">
+        <div class="progress-bar" id="progressBar"></div>
+      </div>
+
+      <div class="controls">
+        <button onclick="processOCR()" id="ocrButton" disabled>🔍 Extract loen Text</button>
+        <button onclick="translateOCRResult()" id="translateOCRButton" disabled>🔄 Translate to English</button>
+      </div>
+
+      <div class="result-container" id="ocrResults" style="display: none;">
+        <h3>OCR Results:</h3>
+        <div id="ocrloen" class="loen-text" style="margin: 10px 0; padding: 10px; background: rgba(255,255,255,0.1); border-radius: 5px;"></div>
+        <div id="ocrEnglish" style="margin: 10px 0; padding: 10px; background: rgba(255,255,255,0.1); border-radius: 5px;"></div>
+      </div>
+    </div>
+  </div>
 
   <script src="script.js"></script>
 </body>
