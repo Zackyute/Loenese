@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Loenese Translator & OCR</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+</head>
+<body>
+  <h1>Loenese Translator & OCR</h1>
+
+  <h2>English → Runes</h2>
+  <textarea id="englishInput" placeholder="Type English here..."></textarea>
+  <p class="runes" id="runeOutput"></p>
+
+  <h2>OCR: Image → English</h2>
+  <input type="file" id="imageUpload" accept="image/*">
+  <p id="ocrResult"></p>
+
+  <script src="script.js"></script>
+</body>
+</html>
