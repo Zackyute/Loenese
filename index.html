@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Loen Translator & OCR</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/tesseract.js/4.1.1/tesseract.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tesseract.js/5.1.0/tesseract.min.js"></script>
     <style>
         @font-face {
             font-family: 'Loen';
@@ -253,6 +253,7 @@
         <div class="header">
             <h1>🃏 Loenese Translator</h1>
             <p>Presgard Di Hellis</p>
+            <div id="fontStatus" class="font-status">🔄 Checking font...</div>
         </div>
 
         <div class="main-content">
@@ -294,7 +295,7 @@
             </div>
         </div>
 
-        <!-- OCR Section -->
+        <!-- OCR Section
         <div class="section ocr-section">
             <h2>👁️ Loen OCR (Image to Text)</h2>
             
@@ -320,7 +321,7 @@
                 <div id="ocrEnglish" style="margin: 10px 0; padding: 10px; background: rgba(255,255,255,0.1); border-radius: 5px;"></div>
             </div>
         </div>
-    </div>
+    </div> -->
 
     <script>
         // Character mapping - Since your font maps A→Loen A, B→Loen B, etc.
@@ -347,44 +348,23 @@
             ' ': ' ', '.': '.', ',': ',', '!': '!', '?': '?', '-': '-', "'": "'",
             '\n': '\n', '\r': '\r', '\t': '\t'
         };
-        // Character mapping - UPDATE THIS based on your font's actual character assignments
-        const loenesesMapping = {
-            // STEP 1: Replace these placeholder characters with your actual Loenese characters
-            // To find the characters: open your font in a font viewer or type each letter in a text editor
-            
-            // Uppercase letters - CUSTOMIZE THESE
-            'A': 'A', 'B': 'B', 'C': 'C', 'D': 'D', 'E': 'E', 'F': 'F', 'G': 'G', 'H': 'H',
-            'I': 'I', 'J': 'J', 'K': 'K', 'L': 'L', 'M': 'M', 'N': 'N', 'O': 'O', 'P': 'P',
-            'Q': 'Q', 'R': 'R', 'S': 'S', 'T': 'T', 'U': 'U', 'V': 'V', 'W': 'W', 'X': 'X',
-            'Y': 'Y', 'Z': 'Z',
-            
-            // Lowercase letters - CUSTOMIZE THESE (or copy from uppercase if same)
-            'a': 'a', 'b': 'b', 'c': 'c', 'd': 'd', 'e': 'e', 'f': 'f', 'g': 'g', 'h': 'h',
-            'i': 'i', 'j': 'j', 'k': 'k', 'l': 'l', 'm': 'm', 'n': 'n', 'o': 'o', 'p': 'p',
-            'q': 'q', 'r': 'r', 's': 's', 't': 't', 'u': 'u', 'v': 'v', 'w': 'w', 'x': 'x',
-            'y': 'y', 'z': 'z',
-            
-            // Numbers - CUSTOMIZE THESE
-            '0': '0', '1': '1', '2': '2', '3': '3', '4': '4', '5': '5',
-            '6': '6', '7': '7', '8': '8', '9': '9',
-            
-            // Punctuation - CUSTOMIZE THESE
-            ' ': ' ', '.': '.', ',': ',', '!': '!', '?': '?', '-': '-', "'": "'"
-        };
 
         // Reverse mapping for Loenese to English
         const englishMapping = {};
-        Object.keys(loenesesMapping).forEach(key => {
-            const value = loenesesMapping[key];
+        Object.keys(loenMapping).forEach(key => {
+            const value = loenMapping[key];
             englishMapping[value] = key;
         });
 
         // Check if font is loaded
         function checkFontLoaded() {
+            const fontStatus = document.getElementById('fontStatus');
+            if (!fontStatus) return; // Exit if element doesn't exist
+            
             const testElement = document.createElement('span');
-            testElement.style.fontFamily = 'Loenese, monospace';
+            testElement.style.fontFamily = 'Loen, monospace';
             testElement.style.fontSize = '20px';
-            testElement.textContent = 'ᚨᛒᚲ';
+            testElement.textContent = 'ABC';
             testElement.style.position = 'absolute';
             testElement.style.visibility = 'hidden';
             document.body.appendChild(testElement);
@@ -395,24 +375,21 @@
             
             document.body.removeChild(testElement);
 
-            const fontStatus = document.getElementById('fontStatus');
             if (fallbackWidth !== monoWidth) {
                 fontStatus.className = 'font-status font-loaded';
-                fontStatus.innerHTML = '✅ Loenese font loaded successfully';
+                fontStatus.innerHTML = '✅ Loen font loaded successfully';
             } else {
                 fontStatus.className = 'font-status font-error';
-                fontStatus.innerHTML = '⚠️ Loenese font not loaded - using fallback runes';
+                fontStatus.innerHTML = '⚠️ Loen font not loaded - using fallback';
             }
         }
 
         function translateToLoen() {
             const englishText = document.getElementById('englishInput').value;
             console.log('Translating to Loen:', englishText);
-            console.log('Mapping object exists:', typeof loenMapping);
             
             const loenText = englishText.split('').map(char => {
                 const mapped = loenMapping[char] || char;
-                console.log(`${char} -> ${mapped}`);
                 return mapped;
             }).join('');
             
@@ -497,115 +474,115 @@
             });
         }
 
-        // OCR functionality
-        let uploadedImage = null;
+        // // OCR functionality
+        // let uploadedImage = null;
 
-        document.getElementById('imageInput').addEventListener('change', function(e) {
-            const file = e.target.files[0];
-            if (file) {
-                uploadedImage = file;
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    const preview = document.getElementById('imagePreview');
-                    preview.src = e.target.result;
-                    preview.style.display = 'block';
-                    document.getElementById('ocrButton').disabled = false;
-                };
-                reader.readAsDataURL(file);
-            }
-        });
+        // document.getElementById('imageInput').addEventListener('change', function(e) {
+        //     const file = e.target.files[0];
+        //     if (file) {
+        //         uploadedImage = file;
+        //         const reader = new FileReader();
+        //         reader.onload = function(e) {
+        //             const preview = document.getElementById('imagePreview');
+        //             preview.src = e.target.result;
+        //             preview.style.display = 'block';
+        //             document.getElementById('ocrButton').disabled = false;
+        //         };
+        //         reader.readAsDataURL(file);
+        //     }
+        // });
 
-        async function processOCR() {
-            if (!uploadedImage) {
-                alert('Please upload an image first');
-                return;
-            }
+        // async function processOCR() {
+        //     if (!uploadedImage) {
+        //         alert('Please upload an image first');
+        //         return;
+        //     }
 
-            const progressContainer = document.getElementById('progressContainer');
-            const progressBar = document.getElementById('progressBar');
-            const ocrButton = document.getElementById('ocrButton');
+        //     const progressContainer = document.getElementById('progressContainer');
+        //     const progressBar = document.getElementById('progressBar');
+        //     const ocrButton = document.getElementById('ocrButton');
             
-            progressContainer.style.display = 'block';
-            ocrButton.disabled = true;
-            progressBar.style.width = '0%';
+        //     progressContainer.style.display = 'block';
+        //     ocrButton.disabled = true;
+        //     progressBar.style.width = '0%';
 
-            try {
-                // Create worker with better error handling
-                console.log('Creating Tesseract worker...');
+        //     try {
+        //         console.log('Creating Tesseract worker...');
                 
-                const worker = await Tesseract.createWorker('eng', 1, {
-                    logger: m => {
-                        console.log('OCR Progress:', m);
-                        if (m.status === 'recognizing text') {
-                            progressBar.style.width = (m.progress * 100) + '%';
-                        }
-                    }
-                });
+        //         // Updated Tesseract.js v5 syntax
+        //         const worker = await Tesseract.createWorker('eng', 1, {
+        //             logger: m => {
+        //                 console.log('OCR Progress:', m);
+        //                 if (m.status === 'recognizing text') {
+        //                     progressBar.style.width = (m.progress * 100) + '%';
+        //                 }
+        //             }
+        //         });
 
-                console.log('Worker created, starting recognition...');
-                const { data: { text } } = await worker.recognize(uploadedImage);
-                console.log('OCR completed:', text);
+        //         console.log('Worker created, starting recognition...');
                 
-                await worker.terminate();
-
-                // Display raw OCR result
-                document.getElementById('ocrLoen').textContent = text;
-                document.getElementById('ocrResults').style.display = 'block';
-                document.getElementById('translateOCRButton').disabled = false;
+        //         // Updated API for v5
+        //         const { data: { text } } = await worker.recognize(uploadedImage);
+        //         console.log('OCR completed:', text);
                 
-                progressContainer.style.display = 'none';
-                ocrButton.disabled = false;
+        //         await worker.terminate();
 
-            } catch (error) {
-                console.error('OCR Error:', error);
-                alert('OCR processing failed: ' + error.message);
-                progressContainer.style.display = 'none';
-                ocrButton.disabled = false;
-            }
-        }
+        //         // Display raw OCR result
+        //         document.getElementById('ocrLoen').textContent = text;
+        //         document.getElementById('ocrResults').style.display = 'block';
+        //         document.getElementById('translateOCRButton').disabled = false;
+                
+        //         progressContainer.style.display = 'none';
+        //         ocrButton.disabled = false;
 
-        function translateOCRResult() {
-            const loenText = document.getElementById('ocrLoen').textContent;
-            let englishText = '';
-            let i = 0;
+        //     } catch (error) {
+        //         console.error('OCR Error:', error);
+        //         alert('OCR processing failed: ' + error.message);
+        //         progressContainer.style.display = 'none';
+        //         ocrButton.disabled = false;
+        //     }
+        // }
+
+        // function translateOCRResult() {
+        //     const loenText = document.getElementById('ocrLoen').textContent;
+        //     let englishText = '';
+        //     let i = 0;
             
-            while (i < loenText.length) {
-                let found = false;
-                for (let len = 3; len >= 1; len--) {
-                    const substr = loenText.substr(i, len);
-                    if (englishMapping[substr]) {
-                        englishText += englishMapping[substr];
-                        i += len;
-                        found = true;
-                        break;
-                    }
-                }
-                if (!found) {
-                    englishText += loenText[i];
-                    i++;
-                }
-            }
+        //     while (i < loenText.length) {
+        //         let found = false;
+        //         for (let len = 3; len >= 1; len--) {
+        //             const substr = loenText.substr(i, len);
+        //             if (englishMapping[substr]) {
+        //                 englishText += englishMapping[substr];
+        //                 i += len;
+        //                 found = true;
+        //                 break;
+        //             }
+        //         }
+        //         if (!found) {
+        //             englishText += loenText[i];
+        //             i++;
+        //         }
+        //     }
             
-            document.getElementById('ocrEnglish').innerHTML = '<strong>English Translation:</strong><br>' + englishText;
-        }
+        //     document.getElementById('ocrEnglish').innerHTML = '<strong>English Translation:</strong><br>' + englishText;
+        // }
 
         // Initialize
-        document.addEventListener('DOMContentLoaded', function() {
-            console.log('DOM loaded, initializing...');
-            populateCharacterReference();
+        // document.addEventListener('DOMContentLoaded', function() {
+        //     console.log('DOM loaded, initializing...');
+        //     populateCharacterReference();
             
-            // Check font loading with delay
-            setTimeout(() => {
-                checkFontLoaded();
-            }, 500);
+        //     // Check font loading with delay
+        //     setTimeout(() => {
+        //         checkFontLoaded();
+        //     }, 500);
             
-            // Check font loading periodically (only if element exists)
-            setInterval(() => {
-                if (document.getElementById('fontStatus')) {
-                    checkFontLoaded();
-                }
-            }, 3000);
-        });
+        //     // Check font loading periodically
+        //     setInterval(() => {
+        //         checkFontLoaded();
+        //     }, 3000);
+        // });
 
         // Auto-translate as user types (with debounce)
         let translateTimeout;
@@ -629,4 +606,3 @@
 </body>
 
 </html>
-
