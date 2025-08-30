@@ -516,7 +516,10 @@
         });
 
         async function processOCR() {
-            if (!uploadedImage) return;
+            if (!uploadedImage) {
+                alert('Please upload an image first');
+                return;
+            }
 
             const progressContainer = document.getElementById('progressContainer');
             const progressBar = document.getElementById('progressBar');
@@ -527,15 +530,22 @@
             progressBar.style.width = '0%';
 
             try {
+                // Create worker with better error handling
+                console.log('Creating Tesseract worker...');
+                
                 const worker = await Tesseract.createWorker('eng', 1, {
                     logger: m => {
+                        console.log('OCR Progress:', m);
                         if (m.status === 'recognizing text') {
                             progressBar.style.width = (m.progress * 100) + '%';
                         }
                     }
                 });
 
+                console.log('Worker created, starting recognition...');
                 const { data: { text } } = await worker.recognize(uploadedImage);
+                console.log('OCR completed:', text);
+                
                 await worker.terminate();
 
                 // Display raw OCR result
@@ -547,6 +557,7 @@
                 ocrButton.disabled = false;
 
             } catch (error) {
+                console.error('OCR Error:', error);
                 alert('OCR processing failed: ' + error.message);
                 progressContainer.style.display = 'none';
                 ocrButton.disabled = false;
@@ -580,11 +591,20 @@
 
         // Initialize
         document.addEventListener('DOMContentLoaded', function() {
+            console.log('DOM loaded, initializing...');
             populateCharacterReference();
-            setTimeout(checkFontLoaded, 100);
             
-            // Check font loading periodically
-            setInterval(checkFontLoaded, 2000);
+            // Check font loading with delay
+            setTimeout(() => {
+                checkFontLoaded();
+            }, 500);
+            
+            // Check font loading periodically (only if element exists)
+            setInterval(() => {
+                if (document.getElementById('fontStatus')) {
+                    checkFontLoaded();
+                }
+            }, 3000);
         });
 
         // Auto-translate as user types (with debounce)
@@ -605,6 +625,8 @@
             }, 500);
         });
     </script>
+
 </body>
 
 </html>
+
