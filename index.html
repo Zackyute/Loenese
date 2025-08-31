@@ -3,12 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Loen Translator & OCR</title>
+    <title>Loen & Hermes Translator</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tesseract.js/5.1.0/tesseract.min.js"></script>
     <style>
         @font-face {
             font-family: 'Loen';
             src: url('./fonts/Loen.otf') format('opentype');
+            font-display: swap;
+        }
+
+        @font-face {
+            font-family: 'AncientHermes';
+            src: url('./fonts/AncientHermes.otf') format('opentype');
             font-display: swap;
         }
 
@@ -46,6 +52,45 @@
         .header p {
             font-size: 1.2rem;
             opacity: 0.9;
+        }
+
+        .language-selector {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .language-option {
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 15px;
+            padding: 15px 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            min-width: 150px;
+            text-align: center;
+        }
+
+        .language-option.active {
+            background: rgba(255, 215, 0, 0.2);
+            border-color: #ffd700;
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.3);
+        }
+
+        .language-option:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+        }
+
+        .language-option h3 {
+            font-size: 1.2rem;
+            margin-bottom: 5px;
+        }
+
+        .language-option p {
+            font-size: 0.9rem;
+            opacity: 0.8;
         }
 
         .main-content {
@@ -96,6 +141,12 @@
 
         .loen-text {
             font-family: 'Loen', monospace;
+            font-size: 18px;
+            line-height: 1.6;
+        }
+
+        .hermes-text {
+            font-family: 'AncientHermes', monospace;
             font-size: 18px;
             line-height: 1.6;
         }
@@ -225,6 +276,11 @@
                 width: 100%;
                 max-width: 200px;
             }
+
+            .language-selector {
+                flex-direction: column;
+                align-items: center;
+            }
         }
 
         .font-status {
@@ -246,20 +302,36 @@
             border: 1px solid #dc3545;
             color: #ffb3b3;
         }
+
+        .font-partial {
+            background: rgba(255, 193, 7, 0.2);
+            border: 1px solid #ffc107;
+            color: #ffeb9c;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <h1>🃏 Loenese Translator</h1>
+            <h1>🃏 Lotm Language Translator</h1>
             <p>Presgard Di Hellis</p>
-            <div id="fontStatus" class="font-status">🔄 Checking font...</div>
+            <div id="fontStatus" class="font-status">🔄 Checking fonts...</div>
+        </div>
+
+        <!-- Language Selector -->
+        <div class="language-selector">
+            <div class="language-option active" onclick="selectLanguage('loen')" id="loenOption">
+                <h3>🃏 Loenese</h3>
+            </div>
+            <div class="language-option" onclick="selectLanguage('hermes')" id="hermesOption">
+                <h3>⚡ Hermes </h3>
+            </div>
         </div>
 
         <div class="main-content">
             <!-- Text Translator -->
             <div class="section">
-                <h2>📝 Text Translator</h2>
+                <h2 id="translatorTitle">📝 Loenese Translator</h2>
                 
                 <div class="textarea-container">
                     <label for="englishInput">English Text:</label>
@@ -267,15 +339,15 @@
                 </div>
 
                 <div class="controls">
-                    <button onclick="translateToLoen()">English → Loenese</button>
-                    <button onclick="translateToEnglish()">Loenese → English</button>
+                    <button onclick="translateToTarget()" id="toTargetBtn">English → Loenese</button>
+                    <button onclick="translateToEnglish()" id="toEnglishBtn">Loenese → English</button>
                     <button onclick="swapTexts()">↕️ Swap</button>
                     <button onclick="clearTexts()">🗑️ Clear</button>
                 </div>
 
                 <div class="textarea-container">
-                    <label for="loenOutput">Loen Text:</label>
-                    <textarea id="loenOutput" class="loen-text" placeholder="Loen translation will appear here..."></textarea>
+                    <label for="targetOutput" id="targetLabel">Loen Text:</label>
+                    <textarea id="targetOutput" class="loen-text" placeholder="Translation will appear here..."></textarea>
                 </div>
 
                 <div class="mapping-display" id="mappingDisplay">
@@ -285,7 +357,7 @@
 
             <!-- Character Reference -->
             <div class="section">
-                <h2>📚 Character Reference</h2>
+                <h2 id="referenceTitle">📚 Loenese Reference</h2>
                 <div id="characterReference">
                     <p style="margin-bottom: 15px;">Character mappings (A-Z, a-z, 0-9):</p>
                     <div id="charGrid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(40px, 1fr)); gap: 10px; font-size: 12px;">
@@ -294,40 +366,14 @@
                 </div>
             </div>
         </div>
-
-        <!-- OCR Section
-        <div class="section ocr-section">
-            <h2>👁️ Loen OCR (Image to Text)</h2>
-            
-            <div class="file-input-wrapper">
-                <input type="file" id="imageInput" class="file-input" accept="image/*">
-                <label for="imageInput" class="file-input-label">📷 Upload Image</label>
-            </div>
-
-            <img id="imagePreview" class="image-preview" alt="Uploaded image preview">
-            
-            <div class="progress" id="progressContainer">
-                <div class="progress-bar" id="progressBar"></div>
-            </div>
-
-            <div class="controls">
-                <button onclick="processOCR()" id="ocrButton" disabled>🔍 Extract Loenese Text</button>
-                <button onclick="translateOCRResult()" id="translateOCRButton" disabled>🔄 Translate to English</button>
-            </div>
-
-            <div class="result-container" id="ocrResults" style="display: none;">
-                <h3>OCR Results:</h3>
-                <div id="ocrLoen" class="loen-text" style="margin: 10px 0; padding: 10px; background: rgba(255,255,255,0.1); border-radius: 5px;"></div>
-                <div id="ocrEnglish" style="margin: 10px 0; padding: 10px; background: rgba(255,255,255,0.1); border-radius: 5px;"></div>
-            </div>
-        </div>
-    </div> -->
+    </div>
 
     <script>
-        // Character mapping - Since your font maps A→Loen A, B→Loen B, etc.
-        // We keep the mapping simple: English stays as English, but gets styled with Loen font
+        // Current selected language
+        let currentLanguage = 'loen';
+
+        // Character mappings for both languages
         const loenMapping = {
-            // Your font handles the visual conversion, so we just pass through the characters
             // Uppercase letters
             'A': 'A', 'B': 'B', 'C': 'C', 'D': 'D', 'E': 'E', 'F': 'F', 'G': 'G', 'H': 'H',
             'I': 'I', 'J': 'J', 'K': 'K', 'L': 'L', 'M': 'M', 'N': 'N', 'O': 'O', 'P': 'P',
@@ -349,90 +395,193 @@
             '\n': '\n', '\r': '\r', '\t': '\t'
         };
 
-        // Reverse mapping for Loenese to English
-        const englishMapping = {};
-        Object.keys(loenMapping).forEach(key => {
-            const value = loenMapping[key];
-            englishMapping[value] = key;
-        });
+        const hermesMapping = {
+            // Same mapping structure for AncientHermes
+            // Uppercase letters
+            'A': 'A', 'B': 'B', 'C': 'C', 'D': 'D', 'E': 'E', 'F': 'F', 'G': 'G', 'H': 'H',
+            'I': 'I', 'J': 'J', 'K': 'K', 'L': 'L', 'M': 'M', 'N': 'N', 'O': 'O', 'P': 'P',
+            'Q': 'Q', 'R': 'R', 'S': 'S', 'T': 'T', 'U': 'U', 'V': 'V', 'W': 'W', 'X': 'X',
+            'Y': 'Y', 'Z': 'Z',
+            
+            // Lowercase letters
+            'a': 'a', 'b': 'b', 'c': 'c', 'd': 'd', 'e': 'e', 'f': 'f', 'g': 'g', 'h': 'h',
+            'i': 'i', 'j': 'j', 'k': 'k', 'l': 'l', 'm': 'm', 'n': 'n', 'o': 'o', 'p': 'p',
+            'q': 'q', 'r': 'r', 's': 's', 't': 't', 'u': 'u', 'v': 'v', 'w': 'w', 'x': 'x',
+            'y': 'y', 'z': 'z',
+            
+            // Numbers
+            '0': '0', '1': '1', '2': '2', '3': '3', '4': '4', '5': '5',
+            '6': '6', '7': '7', '8': '8', '9': '9',
+            
+            // Punctuation
+            ' ': ' ', '.': '.', ',': ',', '!': '!', '?': '?', '-': '-', "'": "'",
+            '\n': '\n', '\r': '\r', '\t': '\t'
+        };
 
-        // Check if font is loaded
+        // Get current mapping based on selected language
+        function getCurrentMapping() {
+            return currentLanguage === 'loen' ? loenMapping : hermesMapping;
+        }
+
+        // Get reverse mapping
+        function getReverseMapping() {
+            const mapping = getCurrentMapping();
+            const reverse = {};
+            Object.keys(mapping).forEach(key => {
+                const value = mapping[key];
+                reverse[value] = key;
+            });
+            return reverse;
+        }
+
+        // Language selection
+        function selectLanguage(lang) {
+            currentLanguage = lang;
+            
+            // Update active language option
+            document.getElementById('loenOption').classList.toggle('active', lang === 'loen');
+            document.getElementById('hermesOption').classList.toggle('active', lang === 'hermes');
+            
+            // Update UI text
+            if (lang === 'loen') {
+                document.getElementById('translatorTitle').textContent = '📝 Loenese Translator';
+                document.getElementById('referenceTitle').textContent = '📚 Loenese Reference';
+                document.getElementById('targetLabel').textContent = 'Loen Text:';
+                document.getElementById('toTargetBtn').textContent = 'English → Loenese';
+                document.getElementById('toEnglishBtn').textContent = 'Loenese → English';
+                document.getElementById('targetOutput').className = 'loen-text';
+                document.getElementById('targetOutput').placeholder = 'Loen translation will appear here...';
+            } else {
+                document.getElementById('translatorTitle').textContent = '📝 Hermes Translator';
+                document.getElementById('referenceTitle').textContent = '📚 Hermes Reference';
+                document.getElementById('targetLabel').textContent = 'Hermes Text:';
+                document.getElementById('toTargetBtn').textContent = 'English → Hermes';
+                document.getElementById('toEnglishBtn').textContent = 'Hermes → English';
+                document.getElementById('targetOutput').className = 'hermes-text';
+                document.getElementById('targetOutput').placeholder = 'Hermes translation will appear here...';
+            }
+            
+            // Update character reference
+            populateCharacterReference();
+            
+            // Re-translate current text if any
+            const englishText = document.getElementById('englishInput').value;
+            const targetText = document.getElementById('targetOutput').value;
+            
+            if (englishText) {
+                translateToTarget();
+            } else if (targetText) {
+                translateToEnglish();
+            }
+            
+            checkFontLoaded();
+        }
+
+        // Check if fonts are loaded
         function checkFontLoaded() {
             const fontStatus = document.getElementById('fontStatus');
-            if (!fontStatus) return; // Exit if element doesn't exist
+            if (!fontStatus) return;
             
-            const testElement = document.createElement('span');
-            testElement.style.fontFamily = 'Loen, monospace';
-            testElement.style.fontSize = '20px';
-            testElement.textContent = 'ABC';
-            testElement.style.position = 'absolute';
-            testElement.style.visibility = 'hidden';
-            document.body.appendChild(testElement);
-
-            const fallbackWidth = testElement.offsetWidth;
-            testElement.style.fontFamily = 'monospace';
-            const monoWidth = testElement.offsetWidth;
+            let loenLoaded = false;
+            let hermesLoaded = false;
             
-            document.body.removeChild(testElement);
+            // Test Loen font
+            const loenTest = document.createElement('span');
+            loenTest.style.fontFamily = 'Loen, monospace';
+            loenTest.style.fontSize = '20px';
+            loenTest.textContent = 'ABC';
+            loenTest.style.position = 'absolute';
+            loenTest.style.visibility = 'hidden';
+            document.body.appendChild(loenTest);
 
-            if (fallbackWidth !== monoWidth) {
+            const loenWidth = loenTest.offsetWidth;
+            loenTest.style.fontFamily = 'monospace';
+            const loenMonoWidth = loenTest.offsetWidth;
+            
+            document.body.removeChild(loenTest);
+            loenLoaded = loenWidth !== loenMonoWidth;
+
+            // Test AncientHermes font
+            const hermesTest = document.createElement('span');
+            hermesTest.style.fontFamily = 'AncientHermes, monospace';
+            hermesTest.style.fontSize = '20px';
+            hermesTest.textContent = 'ABC';
+            hermesTest.style.position = 'absolute';
+            hermesTest.style.visibility = 'hidden';
+            document.body.appendChild(hermesTest);
+
+            const hermesWidth = hermesTest.offsetWidth;
+            hermesTest.style.fontFamily = 'monospace';
+            const hermesMonoWidth = hermesTest.offsetWidth;
+            
+            document.body.removeChild(hermesTest);
+            hermesLoaded = hermesWidth !== hermesMonoWidth;
+
+            // Update status
+            if (loenLoaded && hermesLoaded) {
                 fontStatus.className = 'font-status font-loaded';
-                fontStatus.innerHTML = '✅ Loen font loaded successfully';
+                fontStatus.innerHTML = '✅ Both Loen & Hermes fonts loaded';
+            } else if (loenLoaded || hermesLoaded) {
+                fontStatus.className = 'font-status font-partial';
+                fontStatus.innerHTML = `⚠️ ${loenLoaded ? 'Loen' : 'Hermes'} font loaded, ${!loenLoaded ? 'Loen' : 'Hermes'} using fallback`;
             } else {
                 fontStatus.className = 'font-status font-error';
-                fontStatus.innerHTML = '⚠️ Loen font not loaded - using fallback';
+                fontStatus.innerHTML = '⚠️ Custom fonts not loaded - using fallback';
             }
         }
 
-        function translateToLoen() {
+        function translateToTarget() {
             const englishText = document.getElementById('englishInput').value;
-            console.log('Translating to Loen:', englishText);
+            console.log(`Translating to ${currentLanguage}:`, englishText);
             
-            const loenText = englishText.split('').map(char => {
-                const mapped = loenMapping[char] || char;
+            const mapping = getCurrentMapping();
+            const targetText = englishText.split('').map(char => {
+                const mapped = mapping[char] || char;
                 return mapped;
             }).join('');
             
-            console.log('Final Loen text:', loenText);
-            document.getElementById('loenOutput').value = loenText;
-            showMapping(englishText, loenText);
+            console.log(`Final ${currentLanguage} text:`, targetText);
+            document.getElementById('targetOutput').value = targetText;
+            showMapping(englishText, targetText);
         }
 
         function translateToEnglish() {
-            const loenText = document.getElementById('loenOutput').value;
+            const targetText = document.getElementById('targetOutput').value;
+            const reverseMapping = getReverseMapping();
             let englishText = '';
             let i = 0;
             
-            while (i < loenText.length) {
+            while (i < targetText.length) {
                 // Check for multi-character runes first
                 let found = false;
                 for (let len = 3; len >= 1; len--) {
-                    const substr = loenText.substr(i, len);
-                    if (englishMapping[substr]) {
-                        englishText += englishMapping[substr];
+                    const substr = targetText.substr(i, len);
+                    if (reverseMapping[substr]) {
+                        englishText += reverseMapping[substr];
                         i += len;
                         found = true;
                         break;
                     }
                 }
                 if (!found) {
-                    englishText += loenText[i];
+                    englishText += targetText[i];
                     i++;
                 }
             }
             
             document.getElementById('englishInput').value = englishText;
-            showMapping(englishText, loenText);
+            showMapping(englishText, targetText);
         }
 
-        function showMapping(english, loen) {
+        function showMapping(english, target) {
             const mappingDiv = document.getElementById('mappingDisplay');
+            const mapping = getCurrentMapping();
             let mappingHTML = '<strong>Character Mapping:</strong><br>';
             
             for (let i = 0; i < Math.min(english.length, 50); i++) {
                 const englishChar = english[i];
-                const loenChar = loenMapping[englishChar] || englishChar;
-                mappingHTML += `${englishChar} → ${loenChar}<br>`;
+                const targetChar = mapping[englishChar] || englishChar;
+                mappingHTML += `${englishChar} → ${targetChar}<br>`;
             }
             
             if (english.length > 50) {
@@ -444,16 +593,16 @@
 
         function swapTexts() {
             const englishInput = document.getElementById('englishInput');
-            const loenOutput = document.getElementById('loenOutput');
+            const targetOutput = document.getElementById('targetOutput');
             
             const temp = englishInput.value;
-            englishInput.value = loenOutput.value;
-            loenOutput.value = temp;
+            englishInput.value = targetOutput.value;
+            targetOutput.value = temp;
         }
 
         function clearTexts() {
             document.getElementById('englishInput').value = '';
-            document.getElementById('loenOutput').value = '';
+            document.getElementById('targetOutput').value = '';
             document.getElementById('mappingDisplay').innerHTML = 'Character mapping will appear here when translating...';
         }
 
@@ -461,148 +610,56 @@
             const charGrid = document.getElementById('charGrid');
             charGrid.innerHTML = '';
             
-            Object.entries(loenMapping).forEach(([english, loen]) => {
+            const mapping = getCurrentMapping();
+            const fontClass = currentLanguage === 'loen' ? 'loen-text' : 'hermes-text';
+            
+            Object.entries(mapping).forEach(([english, target]) => {
                 if (english.match(/[A-Za-z0-9]/)) {
                     const charBox = document.createElement('div');
                     charBox.style.cssText = 'text-align: center; padding: 8px; background: rgba(255,255,255,0.1); border-radius: 5px; border: 1px solid rgba(255,255,255,0.2);';
                     charBox.innerHTML = `
                         <div style="font-weight: bold;">${english}</div>
-                        <div class="loen-text" style="font-size: 16px; margin-top: 5px;">${loen}</div>
+                        <div class="${fontClass}" style="font-size: 16px; margin-top: 5px;">${target}</div>
                     `;
                     charGrid.appendChild(charBox);
                 }
             });
         }
 
-        // // OCR functionality
-        // let uploadedImage = null;
-
-        // document.getElementById('imageInput').addEventListener('change', function(e) {
-        //     const file = e.target.files[0];
-        //     if (file) {
-        //         uploadedImage = file;
-        //         const reader = new FileReader();
-        //         reader.onload = function(e) {
-        //             const preview = document.getElementById('imagePreview');
-        //             preview.src = e.target.result;
-        //             preview.style.display = 'block';
-        //             document.getElementById('ocrButton').disabled = false;
-        //         };
-        //         reader.readAsDataURL(file);
-        //     }
-        // });
-
-        // async function processOCR() {
-        //     if (!uploadedImage) {
-        //         alert('Please upload an image first');
-        //         return;
-        //     }
-
-        //     const progressContainer = document.getElementById('progressContainer');
-        //     const progressBar = document.getElementById('progressBar');
-        //     const ocrButton = document.getElementById('ocrButton');
-            
-        //     progressContainer.style.display = 'block';
-        //     ocrButton.disabled = true;
-        //     progressBar.style.width = '0%';
-
-        //     try {
-        //         console.log('Creating Tesseract worker...');
-                
-        //         // Updated Tesseract.js v5 syntax
-        //         const worker = await Tesseract.createWorker('eng', 1, {
-        //             logger: m => {
-        //                 console.log('OCR Progress:', m);
-        //                 if (m.status === 'recognizing text') {
-        //                     progressBar.style.width = (m.progress * 100) + '%';
-        //                 }
-        //             }
-        //         });
-
-        //         console.log('Worker created, starting recognition...');
-                
-        //         // Updated API for v5
-        //         const { data: { text } } = await worker.recognize(uploadedImage);
-        //         console.log('OCR completed:', text);
-                
-        //         await worker.terminate();
-
-        //         // Display raw OCR result
-        //         document.getElementById('ocrLoen').textContent = text;
-        //         document.getElementById('ocrResults').style.display = 'block';
-        //         document.getElementById('translateOCRButton').disabled = false;
-                
-        //         progressContainer.style.display = 'none';
-        //         ocrButton.disabled = false;
-
-        //     } catch (error) {
-        //         console.error('OCR Error:', error);
-        //         alert('OCR processing failed: ' + error.message);
-        //         progressContainer.style.display = 'none';
-        //         ocrButton.disabled = false;
-        //     }
-        // }
-
-        // function translateOCRResult() {
-        //     const loenText = document.getElementById('ocrLoen').textContent;
-        //     let englishText = '';
-        //     let i = 0;
-            
-        //     while (i < loenText.length) {
-        //         let found = false;
-        //         for (let len = 3; len >= 1; len--) {
-        //             const substr = loenText.substr(i, len);
-        //             if (englishMapping[substr]) {
-        //                 englishText += englishMapping[substr];
-        //                 i += len;
-        //                 found = true;
-        //                 break;
-        //             }
-        //         }
-        //         if (!found) {
-        //             englishText += loenText[i];
-        //             i++;
-        //         }
-        //     }
-            
-        //     document.getElementById('ocrEnglish').innerHTML = '<strong>English Translation:</strong><br>' + englishText;
-        // }
-
-        // Initialize
-        // document.addEventListener('DOMContentLoaded', function() {
-        //     console.log('DOM loaded, initializing...');
-        //     populateCharacterReference();
-            
-        //     // Check font loading with delay
-        //     setTimeout(() => {
-        //         checkFontLoaded();
-        //     }, 500);
-            
-        //     // Check font loading periodically
-        //     setInterval(() => {
-        //         checkFontLoaded();
-        //     }, 3000);
-        // });
-
         // Auto-translate as user types (with debounce)
         let translateTimeout;
         document.getElementById('englishInput').addEventListener('input', function() {
             clearTimeout(translateTimeout);
             translateTimeout = setTimeout(() => {
-                console.log('Auto-translating to Loen...');
-                translateToLoen();
+                console.log(`Auto-translating to ${currentLanguage}...`);
+                translateToTarget();
             }, 500);
         });
 
-        document.getElementById('loenOutput').addEventListener('input', function() {
+        document.getElementById('targetOutput').addEventListener('input', function() {
             clearTimeout(translateTimeout);
             translateTimeout = setTimeout(() => {
                 console.log('Auto-translating to English...');
                 translateToEnglish();
             }, 500);
         });
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('DOM loaded, initializing...');
+            populateCharacterReference();
+            
+            // Check font loading with delay
+            setTimeout(() => {
+                checkFontLoaded();
+            }, 500);
+            
+            // Check font loading periodically
+            setInterval(() => {
+                checkFontLoaded();
+            }, 3000);
+        });
     </script>
 
 </body>
-
 </html>
